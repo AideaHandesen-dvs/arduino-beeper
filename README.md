@@ -76,4 +76,4 @@ exec 3<>"$DEV"                          # fd を開いたまま最後まで保�
 
 ## ライセンス
 
-未設定。
+MIT License — [LICENSE](LICENSE) を参照。
