@@ -19,18 +19,12 @@ if dev is None:
 
 ser = serial.Serial(dev, 9600, timeout=0)
 
-# 前回の close で DTR が落ちていれば（HUPCL が立っていれば）、いま開いた瞬間に
-# Arduino がリセットされて起動音が鳴っている。その時だけ BEEPER READY を待つ。
-# そのうえで HUPCL を下ろす＝この close でも次の open でもリセットしない（a.sh の -hupcl と同じ）。
+# HUPCL を下ろす＝この close で DTR を落とさない（a.sh の -hupcl と同じ）。
+# 2026-10-11 に durandal の基板で試した限りでは、DTR を落としても起動音は鳴らず
+# BEEPER READY も来なかった＝起動を待つ処理は置いていない。
 attrs = termios.tcgetattr(ser.fd)
-was_hupcl = bool(attrs[2] & termios.HUPCL)
 attrs[2] &= ~termios.HUPCL
 termios.tcsetattr(ser.fd, termios.TCSANOW, attrs)
-if was_hupcl:
-    ser.timeout = 3
-    ser.read_until(b'BEEPER READY')
-    time.sleep(0.3)  # 起動音（2000Hz → 4000Hz）が鳴り終わるのを待つ
-ser.reset_input_buffer()
 
 # スーパーマリオブラザーズ ゴールファンファーレ（旗のポール）
 # ソドミソドミ ソーミー / ラ♭ドミ♭ラ♭ドミ♭ ラ♭ーミ♭ー / シ♭レファシ♭レファ シ♭ー シ♭シ♭シ♭ ドーー
