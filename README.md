@@ -55,7 +55,8 @@ pip install pyserial
 ./mario.py
 ```
 
-スーパーマリオブラザーズのゴールファンファーレが鳴る（`/dev/ttyUSB0` 決め打ち）。
+スーパーマリオブラザーズのゴールファンファーレが鳴る。デバイスは `a.sh` と同じく
+`$BEEP_DEV` → `/dev/beeper` → by-id 名 → `/dev/ttyUSB0` の順で最初に見つかったもの。
 
 ## ★ 踏みやすい罠 — シリアルを開くと Arduino がリセットされる
 
@@ -69,10 +70,9 @@ stty -F "$DEV" 9600 raw -echo -hupcl   # -hupcl: close で DTR を落とさな�
 exec 3<>"$DEV"                          # fd を開いたまま最後まで保持する
 ```
 
-`mario.py` 側は `serial.Serial()` の直後に `time.sleep(0.5)` を置いて、
-起動が終わるのを待ってから最初の音を送っている。
-（より強く殺すなら `serial.Serial(..., dsrdtr=None, rtscts=False)` で開いて
-`ser.dtr = False` / `ser.rts = False` を立ててから 1.5 秒待つ）
+`mario.py` は開いた直後に termios で HUPCL を下ろす（`-hupcl` と同じ）。
+開いた時点で HUPCL が立っていた＝前回の close で DTR が落ちていた時だけ、
+リセットされたとみて `BEEPER READY` を最大3秒待ってから鳴らす。
 
 ## ライセンス
 

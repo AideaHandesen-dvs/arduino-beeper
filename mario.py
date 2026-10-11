@@ -1,9 +1,36 @@
 #!/usr/bin/env python3
-import serial
+import os
+import termios
 import time
 
-ser = serial.Serial('/dev/ttyUSB0', 9600)
-time.sleep(0.5)
+import serial
+
+# デバイスは上から順に最初に見つかったもの（~/bin/beep・a.sh と同じ並び）。
+# CH340 は通し番号を持たないので、udev で名付けた /dev/beeper を最優先。
+CANDIDATES = [
+    os.environ.get('BEEP_DEV'),
+    '/dev/beeper',
+    '/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0',
+    '/dev/ttyUSB0',
+]
+dev = next((d for d in CANDIDATES if d and os.path.exists(d)), None)
+if dev is None:
+    raise SystemExit('mario.py: ブザー基板が見つからない（BEEP_DEV で指定できる）')
+
+ser = serial.Serial(dev, 9600, timeout=0)
+
+# 前回の close で DTR が落ちていれば（HUPCL が立っていれば）、いま開いた瞬間に
+# Arduino がリセットされて起動音が鳴っている。その時だけ BEEPER READY を待つ。
+# そのうえで HUPCL を下ろす＝この close でも次の open でもリセットしない（a.sh の -hupcl と同じ）。
+attrs = termios.tcgetattr(ser.fd)
+was_hupcl = bool(attrs[2] & termios.HUPCL)
+attrs[2] &= ~termios.HUPCL
+termios.tcsetattr(ser.fd, termios.TCSANOW, attrs)
+if was_hupcl:
+    ser.timeout = 3
+    ser.read_until(b'BEEPER READY')
+    time.sleep(0.3)  # 起動音（2000Hz → 4000Hz）が鳴り終わるのを待つ
+ser.reset_input_buffer()
 
 # スーパーマリオブラザーズ ゴールファンファーレ（旗のポール）
 # ソドミソドミ ソーミー / ラ♭ドミ♭ラ♭ドミ♭ ラ♭ーミ♭ー / シ♭レファシ♭レファ シ♭ー シ♭シ♭シ♭ ドーー
