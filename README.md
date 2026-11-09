@@ -19,7 +19,7 @@ PC ──USB(9600 8N1)── Arduino Nano ──D9── 圧電ブザー
 | ビルド | PlatformIO / `env:nanoatmega328` |
 | ボーレート | 9600 |
 
-`setup()` で D6 を OUTPUT・LOW にしている（ブザーの片脚を隣のピンに挿す配線に対応するため）。
+`setup()` で D6 を OUTPUT・LOW にしている（ブザーの片脚を隣のピンに挿す配線に対応するため）。ピンは `GND_PIN` で変えられる（`build_flags = -DGND_PIN=7`）。
 `platformio.ini` の `board_build.f_cpu = 4000000L` は 4MHz 動作のボード向けの指定。
 16MHz の素の Nano に載せるならここを `16000000L` に直すこと（音程とボーレートがずれる）。
 
@@ -88,6 +88,7 @@ DTR を明示的に 0.25 秒落としても、起動音は鳴らず `BEEPER READ
   （`-F` はチップの照合を飛ばす。返ってくる署名は `0x1e950f` で m328p と同じ）
 - 未解決: 基板から PC への返事（`BEEPER READY` / `OK …`）が読めなかった。PC から基板への命令は通る＝鳴らすだけなら困らない
 - 青い LED は D13（「L」）。今のファームでは使っていない
+- **ブザーの片脚が D7 に付いた基板**（家用の3枚目）は `pio run -e nanoatmega328_d7` でビルドする（`GND_PIN=7`）。既定の `nanoatmega328` は従来どおり D6
 - 充電専用の USB ケーブルだと `/dev/ttyUSB*` が出てこない（CH340 が見えない）。最初に疑う
 
 ## ライセンス

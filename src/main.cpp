@@ -1,6 +1,9 @@
 #include <Arduino.h>
 
 const int BUZZER_PIN = 9;
+#ifndef GND_PIN
+#define GND_PIN 6   // ブザーのもう片脚を挿すピン（LOW に固定する）
+#endif
 char buf[32];
 int idx = 0;
 
@@ -27,8 +30,8 @@ void processCommand(const char* cmd) {
 }
 
 void setup() {
-    pinMode(6, OUTPUT);
-    digitalWrite(6, LOW);
+    pinMode(GND_PIN, OUTPUT);
+    digitalWrite(GND_PIN, LOW);
 
     Serial.begin(9600);
     pinMode(BUZZER_PIN, OUTPUT);
